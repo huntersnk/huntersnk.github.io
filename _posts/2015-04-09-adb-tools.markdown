@@ -1,0 +1,228 @@
+---
+layout: post
+title:  "ADB工具[不系统]教程"
+date:   2015-04-09 02:17:42 +0800
+---
+节选翻译自http://developer.android.com/tools/help/adb.html
+
+
+
+使用adb tool也差不多有3年多了，一直没有详细的看过官方文档，前几天的一场对话得知接下来可能会有常用到adb的机会，因此今天白天抽空把官方文档看了一遍，翻译了一点常用到的以及新增加的adb功能列到这里，更详细的请查看上面链接的原始文档，可能你需要特殊手段才能访问，我不确定。另外可能后续还会更新，同样不确定。
+
+####什么是ADB?
+
+Android调试桥接器，简称adb，是用于与android模拟器或真机通讯的通用工具，采用了客户端-服务器模型，包括三个部分：
+
+
+
+客户端部分，运行在开发用的电脑上，可以在命令行中运行adb命令来调用该客户端，像ADB插件和DDMS这样的Android工具也可以调用adb客户端。
+
+
+
+服务端部分，是运行在开发用电脑上的后台进程，用于管理客户端与运行在模拟器或真机的守护进程通信。
+
+
+
+守护进程部分，运行于模拟器或手机的后台
+
+
+
+当启动adb客户端时，客户端首先检测adb服务端进程是否运行，如果没有运行，则启动服务端。当服务端启动时，它会绑定到本地的TCP5037端口，并且监听从adb客户端发来的命令——所有的adb客户端都使用5037端口与adb服务端通信。
+
+
+
+接下来服务端与所有正在运行的模拟器或手机连接。它通过扫描5555-5585之间的奇数号端口来搜索模拟器或手机，一旦发现adb守护进程，就通过此端口进行连接。需要说明的是，每一个模拟器或手机使用一对有序的端口，偶数号端口用于控制台连接，奇数号端口用于adb连接，例如：
+
+
+
+Emulator 1, console: 5554
+
+
+
+Emulator 1, adb: 5555
+
+
+
+Emulator 2, console: 5556
+
+
+
+Emulator 2, adb: 5557 ...
+
+
+
+即如果模拟器与adb在5555端口连接，则其与控制台的连接就是5554端口。
+
+
+
+    adb [-d|-e|-s <serialNumber>] <command>
+
+    adb -s emulator-5556 install hw.apk
+
+
+
+多个设备时指定某设备安装hw.apk文件
+
+
+
+    adb install <path_to_apk>
+
+
+
+安装apk
+
+
+
+转发端口
+
+forwording ports
+
+
+
+    adb forward tcp:6100 tcp:7100
+
+
+
+    adb pull <remote> <local>
+
+
+
+拖下来文件
+
+
+
+    adb push <local> <remote>
+
+
+
+推进去文件
+
+
+
+    adb push foo.apk /system/app/
+
+
+
+    adb devices
+
+
+
+查看已经连接的设备列表，会列出 设备类型-端口号 状态(state)
+
+
+
+    adb version
+
+
+
+输出adb的版本号
+
+
+
+    adb logcat [option] [filter-specs]
+
+
+
+输出log数据到屏幕上
+
+
+
+    adb bugreport
+
+
+
+打印dumpsys,dumpstate和logcat数据到屏幕上
+
+
+
+    adb start-server
+
+    adb kill server
+
+
+
+adb shell进入设备终端
+
+
+
+adb的shell命令的二进制文件放在/system/bin/.内
+
+
+
+进入shell后
+
+
+
+dumpsys 显示系统数据
+
+dumpstate将状态输出到文件
+
+logcat 输出日志信息
+
+dmesg 在屏幕上输出核心调试信息
+
+start/reboot 启动或重新启动模拟器或手机
+
+
+
+stop停止模拟器或手机
+
+
+
+    adb shell screenrecord /sdcard/demo.mp4
+
+
+
+4.4以上(API level 19)更高
+
+screenrecord可以录制屏幕输出保存成MPEG-4文件
+
+停止录制按Ctrl-C
+
+shell后
+
+
+
+    screenrecord --verbose /sdcard/demo.mp4
+
+
+
+--size widthxheight 指定分辨率
+
+
+
+--bit-rate 默认是4Mbps，可以增加或减少以实现清晰程度
+
+screenrecord --bit-rate 6000000 /sdcard/demo.mp4
+
+设置6Mbps
+
+
+
+--time-limit 默认是180秒
+
+
+
+--rotate 旋转90度输出，实验性feature
+
+
+
+--verbose 在命令提示行处显示log信息，不加的话在录制时不会输出任何信息
+
+
+
+####UI/Application Exerciser Monkey
+
+Monkey test 是一个已经预制进设备的程序，可供调用生成随机不规则操作，模拟压力测试
+
+
+
+    adb shell monkey -v -p your.package.name 500
+
+
+
+对package进行500次的随机操作测试
+
+
+
+包名一般是com开头，可以通过执行后进logcat来查看
